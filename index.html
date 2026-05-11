@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="th" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agentic SDLC Gemini CLI Lab</title>
+    <meta
+      name="description"
+      content="แบบฝึกหัด Human-led Agentic AI ใน SDLC ด้วย Gemini CLI, GitLab และ glab"
+    />
+    <script>
+      (() => {
+        const key = "agentic-sdlc-gemini-cli-lab:v1";
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || "{}");
+          const theme =
+            saved.theme ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.classList.toggle("dark", theme === "dark");
+        } catch {
+          document.documentElement.classList.toggle(
+            "dark",
+            window.matchMedia("(prefers-color-scheme: dark)").matches,
+          );
+        }
+      })();
+    </script>
+    <script>
+      tailwind = {
+        config: {
+          darkMode: "class",
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: [
+                  "Inter",
+                  "Noto Sans Thai",
+                  "ui-sans-serif",
+                  "system-ui",
+                  "sans-serif",
+                ],
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body class="bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">
+    <div class="min-h-screen">
+      <header class="border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/92">
+        <div class="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
+          <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div class="max-w-3xl">
+              <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                Open Source Technology Internal Training
+              </p>
+              <h1 class="mt-2 text-2xl font-bold leading-tight sm:text-4xl">
+                Agentic SDLC Gemini CLI Lab
+              </h1>
+              <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">
+                แบบฝึกหัดแบบลงมือทำจริง แบ่งตาม Part พร้อมบันทึกความคืบหน้าในเครื่องนี้
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                id="themeToggle"
+                type="button"
+                class="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              >
+                <i data-lucide="moon" class="h-4 w-4"></i>
+                <span id="themeLabel">Dark</span>
+              </button>
+              <button
+                id="resetButton"
+                type="button"
+                class="inline-flex h-10 items-center gap-2 rounded-md border border-rose-300 bg-white px-3 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
+              >
+                <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <section class="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/70 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Progress</p>
+                <p id="progressText" class="text-sm font-semibold text-slate-700 dark:text-slate-200">0%</p>
+              </div>
+              <div class="mt-2 h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                <div
+                  id="progressBar"
+                  class="h-full w-0 rounded-full bg-emerald-600 transition-all duration-300 dark:bg-emerald-400"
+                ></div>
+              </div>
+              <p id="progressDetail" class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                0 of 0 completed
+              </p>
+            </div>
+            <div class="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+              <p class="font-semibold text-slate-800 dark:text-slate-100">Training UUID</p>
+              <p id="uuidText" class="mt-1 break-all font-mono"></p>
+            </div>
+          </section>
+        </div>
+      </header>
+
+      <main class="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[18rem_1fr] lg:px-8">
+        <aside class="lg:sticky lg:top-4 lg:self-start">
+          <nav class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center gap-2 px-2 pb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <i data-lucide="list-checks" class="h-4 w-4"></i>
+              Parts
+            </div>
+            <div id="partNav" class="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible"></div>
+          </nav>
+        </aside>
+
+        <div class="space-y-6">
+          <section
+            id="certificateGate"
+            class="hidden rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40"
+          >
+            <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                  ทำครบ 100% แล้ว
+                </p>
+                <p class="mt-1 text-sm text-emerald-900/80 dark:text-emerald-100/80">
+                  ใส่ชื่อเพื่อออก certificate โดย UUID จะคงเดิมจนกว่าจะ reset รอบใหม่
+                </p>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <label class="sr-only" for="certificateName">ชื่อบน certificate</label>
+                <input
+                  id="certificateName"
+                  type="text"
+                  autocomplete="name"
+                  placeholder="ชื่อผู้เรียน"
+                  class="h-10 min-w-0 rounded-md border border-emerald-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 dark:border-emerald-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-emerald-900"
+                />
+                <button
+                  id="certificateButton"
+                  type="button"
+                  class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                >
+                  <i data-lucide="award" class="h-4 w-4"></i>
+                  ขอ cert
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section id="certificatePanel" class="hidden">
+            <div class="certificate-card rounded-lg border border-slate-300 bg-white p-6 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                Certificate of Completion
+              </p>
+              <h2 class="mt-4 text-2xl font-bold sm:text-4xl">Agentic SDLC Gemini CLI Lab</h2>
+              <p class="mt-5 text-sm text-slate-600 dark:text-slate-300">This certifies that</p>
+              <p id="certificateDisplayName" class="mt-2 text-2xl font-bold text-slate-950 dark:text-white sm:text-3xl"></p>
+              <p class="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                completed the Human-led Agentic AI SDLC internal training exercise.
+              </p>
+              <div class="mt-6 grid gap-3 text-left text-xs text-slate-600 dark:text-slate-300 sm:grid-cols-3">
+                <div class="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                  <p class="font-semibold text-slate-900 dark:text-slate-100">UUID</p>
+                  <p id="certificateUuid" class="mt-1 break-all font-mono"></p>
+                </div>
+                <div class="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                  <p class="font-semibold text-slate-900 dark:text-slate-100">Issued</p>
+                  <p id="certificateDate" class="mt-1"></p>
+                </div>
+                <div class="rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                  <p class="font-semibold text-slate-900 dark:text-slate-100">Issuer</p>
+                  <p class="mt-1">Open Source Technology Internal Training Program</p>
+                </div>
+              </div>
+              <button
+                id="printCertificate"
+                type="button"
+                class="mt-5 inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800"
+              >
+                <i data-lucide="printer" class="h-4 w-4"></i>
+                Print
+              </button>
+            </div>
+          </section>
+
+          <section id="contentRoot" class="space-y-6"></section>
+        </div>
+      </main>
+    </div>
+
+    <template id="partTemplate">
+      <section class="part-section rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="border-b border-slate-200 p-4 dark:border-slate-800 sm:p-5">
+          <p class="part-kicker text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"></p>
+          <h2 class="part-title mt-1 text-xl font-bold sm:text-2xl"></h2>
+          <p class="part-count mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
+        </div>
+        <div class="part-items divide-y divide-slate-200 dark:divide-slate-800"></div>
+      </section>
+    </template>
+
+    <template id="itemTemplate">
+      <article class="item-card scroll-mt-4">
+        <div class="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-start sm:p-5">
+          <div>
+            <p class="item-meta text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400"></p>
+            <h3 class="item-title mt-1 text-lg font-semibold leading-snug"></h3>
+          </div>
+          <button
+            type="button"
+            class="complete-button inline-flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold shadow-sm transition"
+          >
+            <i data-lucide="circle" class="h-4 w-4"></i>
+            <span>Mark complete</span>
+          </button>
+        </div>
+        <div class="markdown-body px-4 pb-5 sm:px-5"></div>
+      </article>
+    </template>
+
+    <script src="assets/content.js"></script>
+    <script src="assets/app.js"></script>
+  </body>
+</html>
