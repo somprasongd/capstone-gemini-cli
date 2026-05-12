@@ -58,6 +58,10 @@ function bindControls() {
     dom.certificateName.value = "";
     document.querySelectorAll(".item-card").forEach((card) => card.classList.remove("is-complete"));
     document.querySelectorAll(".complete-button").forEach((button) => setButtonState(button, false));
+    document.querySelectorAll(".part-toggle-button").forEach((button) => {
+      button.classList.remove("is-part-complete");
+      button.innerHTML = '<i data-lucide="check-square" class="h-4 w-4"></i><span>Complete all</span>';
+    });
     updateProgressUI();
     refreshIcons();
   });
@@ -94,7 +98,7 @@ function renderCourse() {
     navLink.dataset.groupId = group.id;
     navLink.innerHTML = `
       <span class="truncate">${escapeHtml(group.navTitle)}</span>
-      <span class="nav-percent bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">0%</span>
+      <span class="nav-percent bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">0%</span>
     `;
     dom.partNav.appendChild(navLink);
 
@@ -105,10 +109,14 @@ function renderCourse() {
     partNode.querySelector(".part-title").textContent = group.title;
     partNode.querySelector(".part-count").textContent = `${group.items.length} หัวข้อย่อย`;
 
+    const partToggleButton = partNode.querySelector(".part-toggle-button");
+    partToggleButton.dataset.groupId = group.id;
+    partToggleButton.addEventListener("click", () => togglePartComplete(group.id));
+
     const itemsRoot = partNode.querySelector(".part-items");
     if (group.introMarkdown.trim()) {
       const intro = document.createElement("div");
-      intro.className = "markdown-body border-b border-slate-200 p-4 dark:border-slate-800 sm:p-5";
+      intro.className = "markdown-body border-b border-violet-100 p-4 dark:border-violet-900/20 sm:p-5";
       intro.innerHTML = renderMarkdown(group.introMarkdown);
       itemsRoot.appendChild(intro);
     }
@@ -159,6 +167,29 @@ function toggleComplete(itemId) {
   updateProgressUI();
 }
 
+function togglePartComplete(groupId) {
+  const group = course.groups.find((g) => g.id === groupId);
+  if (!group) return;
+
+  const groupItemIds = group.items.map((item) => item.id);
+  const allDone = groupItemIds.every((id) => state.completed.includes(id));
+
+  if (allDone) {
+    state.completed = state.completed.filter((id) => !groupItemIds.includes(id));
+  } else {
+    const newCompleted = new Set(state.completed);
+    groupItemIds.forEach((id) => newCompleted.add(id));
+    state.completed = [...newCompleted];
+  }
+
+  if (state.completed.length !== allItems.length) {
+    state.issuedAt = "";
+  }
+
+  saveState();
+  updateProgressUI();
+}
+
 function updateProgressUI() {
   const completedCount = state.completed.length;
   const totalCount = allItems.length;
@@ -189,13 +220,22 @@ function updateProgressUI() {
       badge.className = [
         "nav-percent",
         groupPercent === 100
-          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"
-          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+          : "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
       ].join(" ");
     }
 
     if (partCount) {
       partCount.textContent = `${groupCompleted}/${group.items.length} หัวข้อย่อยเสร็จแล้ว`;
+    }
+
+    const partToggleButton = document.querySelector(`.part-toggle-button[data-group-id="${cssEscape(group.id)}"]`);
+    if (partToggleButton) {
+      const allDone = group.items.length > 0 && groupCompleted === group.items.length;
+      partToggleButton.classList.toggle("is-part-complete", allDone);
+      partToggleButton.innerHTML = allDone
+        ? '<i data-lucide="check-check" class="h-4 w-4"></i><span>Completed</span>'
+        : '<i data-lucide="check-square" class="h-4 w-4"></i><span>Complete all</span>';
     }
   });
 
