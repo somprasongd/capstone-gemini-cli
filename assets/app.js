@@ -2,6 +2,7 @@ const STORAGE_KEY = "agentic-sdlc-gemini-cli-lab:v1";
 const COURSE_MARKDOWN = window.COURSE_MARKDOWN || "";
 
 const dom = {
+  app: document.querySelector("#app"),
   contentRoot: document.querySelector("#contentRoot"),
   partNav: document.querySelector("#partNav"),
   progressText: document.querySelector("#progressText"),
@@ -11,6 +12,10 @@ const dom = {
   themeToggle: document.querySelector("#themeToggle"),
   themeLabel: document.querySelector("#themeLabel"),
   resetButton: document.querySelector("#resetButton"),
+  sidebarToggle: document.querySelector("#sidebarToggle"),
+  sidebarClose: document.querySelector("#sidebarClose"),
+  sidebar: document.querySelector("#sidebar"),
+  sidebarOverlay: document.querySelector("#sidebarOverlay"),
   certificateGate: document.querySelector("#certificateGate"),
   certificatePanel: document.querySelector("#certificatePanel"),
   certificateName: document.querySelector("#certificateName"),
@@ -66,6 +71,10 @@ function bindControls() {
     refreshIcons();
   });
 
+  dom.sidebarToggle.addEventListener("click", () => toggleSidebar(true));
+  dom.sidebarClose.addEventListener("click", () => toggleSidebar(false));
+  dom.sidebarOverlay.addEventListener("click", () => toggleSidebar(false));
+
   dom.certificateName.addEventListener("input", () => {
     state.certificateName = dom.certificateName.value;
     saveState();
@@ -87,6 +96,16 @@ function bindControls() {
   dom.printCertificate.addEventListener("click", () => window.print());
 }
 
+function toggleSidebar(open) {
+  dom.sidebar.classList.toggle("sidebar-open", open);
+  dom.sidebarOverlay.classList.toggle("sidebar-open", open);
+  if (open) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+}
+
 function renderCourse() {
   dom.partNav.innerHTML = "";
   dom.contentRoot.innerHTML = "";
@@ -94,12 +113,17 @@ function renderCourse() {
   course.groups.forEach((group, groupIndex) => {
     const navLink = document.createElement("a");
     navLink.href = `#${group.id}`;
-    navLink.className = "part-nav-link text-sm font-semibold text-slate-700 dark:text-slate-200";
+    navLink.className = "part-nav-link";
     navLink.dataset.groupId = group.id;
     navLink.innerHTML = `
       <span class="truncate">${escapeHtml(group.navTitle)}</span>
       <span class="nav-percent bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">0%</span>
     `;
+    navLink.addEventListener("click", (e) => {
+      if (window.innerWidth < 1024) {
+        toggleSidebar(false);
+      }
+    });
     dom.partNav.appendChild(navLink);
 
     const partNode = dom.partTemplate.content.firstElementChild.cloneNode(true);
@@ -240,9 +264,16 @@ function updateProgressUI() {
   });
 
   const isCompleteAll = totalCount > 0 && completedCount === totalCount;
-  dom.certificateGate.classList.toggle("hidden", !isCompleteAll);
+  if (isCompleteAll) {
+    dom.certificateGate.classList.remove("hidden");
+    dom.certificateGate.style.display = "";
+  } else {
+    dom.certificateGate.classList.add("hidden");
+  }
+
   if (!isCompleteAll) {
     dom.certificatePanel.classList.add("hidden");
+    dom.certificatePanel.style.display = "";
   }
 
   updateCertificateUI();
@@ -259,7 +290,13 @@ function updateCertificateUI(forceOpen = false) {
   dom.certificateDate.textContent = state.issuedAt
     ? new Intl.DateTimeFormat("th-TH", { dateStyle: "long" }).format(new Date(state.issuedAt))
     : new Intl.DateTimeFormat("th-TH", { dateStyle: "long" }).format(new Date());
-  dom.certificatePanel.classList.toggle("hidden", !shouldShow);
+
+  if (shouldShow) {
+    dom.certificatePanel.classList.remove("hidden");
+    dom.certificatePanel.style.display = "";
+  } else {
+    dom.certificatePanel.classList.add("hidden");
+  }
 }
 
 function setButtonState(button, isComplete) {
@@ -272,7 +309,9 @@ function setButtonState(button, isComplete) {
 function applyTheme(theme) {
   const resolved = theme || preferredTheme();
   document.documentElement.classList.toggle("dark", resolved === "dark");
-  dom.themeLabel.textContent = resolved === "dark" ? "Light" : "Dark";
+
+  dom.app.className = resolved === "dark" ? "app-dark" : "app-light";
+
   dom.themeToggle.innerHTML =
     resolved === "dark"
       ? '<i data-lucide="sun" class="h-4 w-4"></i><span id="themeLabel">Light</span>'
